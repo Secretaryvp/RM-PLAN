@@ -1,0 +1,2024 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Film Inventory — Flexible Packaging</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Thai:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #F5F3EE;
+    --surface: #FFFFFF;
+    --surface2: #F0EDE6;
+    --border: #D8D3C8;
+    --border2: #C4BFB2;
+    --text: #1C1A17;
+    --text2: #6B6660;
+    --text3: #9A9590;
+    --amber: #C87800;
+    --amber-bg: #FFF3DC;
+    --amber-border: #F0C060;
+    --green: #2A7A3B;
+    --green-bg: #E8F5EC;
+    --red: #B83030;
+    --red-bg: #FCEAEA;
+    --blue: #1A5FA0;
+    --blue-bg: #E6F0FA;
+    --radius: 8px;
+    --radius-lg: 12px;
+  }
+
+  body {
+    font-family: 'IBM Plex Sans Thai', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* Layout */
+  .app { display: flex; flex-direction: column; min-height: 100vh; }
+
+  .topbar {
+    background: var(--text);
+    color: #fff;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    height: 52px;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .topbar-logo {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    opacity: 0.9;
+  }
+  .topbar-sep { flex: 1; }
+  .topbar-badge {
+    background: var(--amber);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.04em;
+  }
+
+  .nav {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    display: flex;
+    gap: 0;
+  }
+  .nav-btn {
+    background: none; border: none; cursor: pointer;
+    padding: 12px 18px;
+    font-family: 'IBM Plex Sans Thai', sans-serif;
+    font-size: 13px;
+    color: var(--text2);
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: all 0.15s;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .nav-btn:hover { color: var(--text); background: var(--bg); }
+  .nav-btn.active { color: var(--amber); border-bottom-color: var(--amber); font-weight: 500; }
+
+  .content { padding: 24px; max-width: 1100px; margin: 0 auto; width: 100%; }
+
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* Cards */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .card-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .card-title { font-size: 14px; font-weight: 600; color: var(--text); }
+
+  /* Stats grid */
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+  }
+  .stat-label { font-size: 11px; color: var(--text3); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 4px; }
+  .stat-value { font-family: 'IBM Plex Mono', monospace; font-size: 22px; font-weight: 500; color: var(--text); }
+  .stat-unit { font-size: 11px; color: var(--text3); margin-left: 3px; }
+
+  /* Form */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-group.full { grid-column: 1 / -1; }
+  label { font-size: 12px; font-weight: 500; color: var(--text2); }
+  input, select, textarea {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 8px 12px;
+    font-family: 'IBM Plex Sans Thai', sans-serif;
+    font-size: 13px;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--amber); background: #fff; }
+  input[type="number"] { font-family: 'IBM Plex Mono', monospace; }
+
+  .btn {
+    background: var(--text);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    padding: 9px 18px;
+    font-family: 'IBM Plex Sans Thai', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn:hover { opacity: 0.85; }
+  .btn-amber { background: var(--amber); }
+  .btn-outline {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border2);
+  }
+  .btn-outline:hover { background: var(--bg); }
+  .btn-sm { padding: 5px 12px; font-size: 12px; }
+  .btn-danger { background: var(--red); }
+
+  /* Film roll table */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    text-align: left;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text3);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  td { padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--bg); }
+  .mono { font-family: 'IBM Plex Mono', monospace; }
+
+  /* Progress bar */
+  .progress-wrap { width: 100px; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+  .progress-bar { height: 100%; border-radius: 3px; transition: width 0.3s; }
+  .progress-ok { background: var(--green); }
+  .progress-warn { background: var(--amber); }
+  .progress-low { background: var(--red); }
+
+  /* Badge */
+  .badge {
+    display: inline-flex; align-items: center;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .badge-green { background: var(--green-bg); color: var(--green); }
+  .badge-amber { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
+  .badge-red { background: var(--red-bg); color: var(--red); }
+  .badge-blue { background: var(--blue-bg); color: var(--blue); }
+  .badge-gray { background: var(--surface2); color: var(--text2); }
+
+  /* Width tag */
+  .width-tag {
+    display: inline-flex; align-items: center;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    background: var(--text);
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.02em;
+  }
+
+  /* Usage list */
+  .usage-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+  }
+  .usage-item:last-child { border-bottom: none; }
+  .usage-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--amber); flex-shrink: 0; }
+
+  /* Search / filter bar */
+  .filter-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+  .filter-bar input, .filter-bar select { flex: 0 0 auto; }
+  .search-input { flex: 1 !important; }
+
+  /* Compatible panel */
+  .compat-section { background: var(--amber-bg); border: 1px solid var(--amber-border); border-radius: var(--radius); padding: 16px; margin-top: 16px; }
+  .compat-title { font-size: 12px; font-weight: 600; color: var(--amber); margin-bottom: 10px; letter-spacing: 0.04em; text-transform: uppercase; }
+  .compat-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 7px 10px;
+    background: #fff;
+    border-radius: 6px;
+    margin-bottom: 6px;
+    font-size: 12px;
+  }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.45);
+    display: none; align-items: center; justify-content: center;
+    z-index: 200;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    width: 520px;
+    max-width: 95vw;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+  }
+  .modal-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+  .modal-close {
+    position: absolute; top: 16px; right: 16px;
+    background: none; border: none; cursor: pointer;
+    font-size: 18px; color: var(--text3);
+    width: 28px; height: 28px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+  }
+  .modal-close:hover { background: var(--bg); color: var(--text); }
+
+  /* Section heading */
+  .section-head { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+  .section-title { font-size: 15px; font-weight: 600; }
+  .section-count {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    background: var(--surface2);
+    color: var(--text3);
+    padding: 2px 8px;
+    border-radius: 20px;
+  }
+
+  /* Empty state */
+  .empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text3);
+    font-size: 13px;
+  }
+
+  /* Divider */
+  .divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+
+  /* Alert */
+  .alert {
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    font-size: 13px;
+    margin-bottom: 12px;
+    display: flex; gap: 8px; align-items: flex-start;
+  }
+  .alert-success { background: var(--green-bg); color: var(--green); border: 1px solid #b0dbb8; }
+  .alert-error { background: var(--red-bg); color: var(--red); border: 1px solid #f0c0c0; }
+  .alert-info { background: var(--amber-bg); color: #7A4A00; border: 1px solid var(--amber-border); }
+
+  @media (max-width: 700px) {
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+    .form-grid { grid-template-columns: 1fr; }
+    .form-grid-3 { grid-template-columns: 1fr; }
+    .content { padding: 14px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="topbar">
+    <span class="topbar-logo">FILM TRACKER</span>
+    <span style="font-size:12px;opacity:0.5;font-family:'IBM Plex Mono',monospace">FLEXIBLE PACKAGING</span>
+    <span class="topbar-sep"></span>
+    <span class="topbar-badge" style="background:#2A7A3B">&#x1F465; SHARED TEAM</span>
+  </div>
+
+  <div class="nav">
+    <button class="nav-btn active" data-page="dashboard" onclick="goPage('dashboard')">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
+      ภาพรวม
+    </button>
+    <button class="nav-btn" data-page="rolls" onclick="goPage('rolls')">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5" fill="none"/><circle cx="8" cy="8" r="3"/></svg>
+      ม้วน Film
+    </button>
+    <button class="nav-btn" data-page="usage" onclick="goPage('usage')">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><rect x="2" y="2" width="12" height="2" rx="1"/><rect x="2" y="7" width="9" height="2" rx="1"/><rect x="2" y="12" width="6" height="2" rx="1"/></svg>
+      บันทึกการใช้
+    </button>
+    <button class="nav-btn" data-page="reserve" onclick="goPage('reserve')">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M5 8h6M8 5v6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      จอง Film
+      <span id="reserve-badge" style="display:none;background:var(--amber);color:#fff;font-size:10px;padding:1px 6px;border-radius:10px;margin-left:2px">0</span>
+    </button>
+    <button class="nav-btn" data-page="search" onclick="goPage('search')">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><circle cx="6.5" cy="6.5" r="4.5" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M10.5 10.5 L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      หาม้วนที่ใช้ได้
+    </button>
+    <button class="nav-btn" data-page="slit" onclick="goPage('slit')">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M2 8 L14 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M8 2 L8 6M8 10 L8 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      สลิต Film
+    </button>
+  </div>
+
+  <div class="content">
+    <div id="alert-box"></div>
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="stats-grid" id="stats-grid"></div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Film ใกล้หมด</span>
+            <span class="badge badge-amber" id="low-count">0 ม้วน</span>
+          </div>
+          <div id="low-rolls"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">การใช้งานล่าสุด</span>
+          </div>
+          <div id="recent-usage"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROLLS -->
+    <div class="page" id="page-rolls">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <div class="section-head" style="margin:0">
+          <span class="section-title">ม้วน Film ทั้งหมด</span>
+          <span class="section-count" id="rolls-count">0</span>
+        </div>
+        <button class="btn btn-amber" onclick="openAddRoll()">+ เพิ่มม้วน Film</button>
+      </div>
+
+      <div class="filter-bar">
+        <input type="text" class="search-input" placeholder="ค้นหา Lot, หน้ากว้าง, Supplier..." id="roll-search" oninput="renderRolls()">
+        <select id="roll-filter-status" onchange="renderRolls()">
+          <option value="">สถานะทั้งหมด</option>
+          <option value="ok">พร้อมใช้</option>
+          <option value="warn">ใกล้หมด</option>
+          <option value="empty">หมดแล้ว</option>
+        </select>
+        <select id="roll-sort" onchange="renderRolls()">
+          <option value="date-desc">ล่าสุดก่อน</option>
+          <option value="date-asc">เก่าสุดก่อน</option>
+          <option value="width-asc">หน้ากว้าง น้อย→มาก</option>
+          <option value="width-desc">หน้ากว้าง มาก→น้อย</option>
+          <option value="remain-asc">คงเหลือ น้อย→มาก</option>
+        </select>
+      </div>
+
+      <div id="rolls-grid"></div>
+    </div>
+
+    <!-- USAGE -->
+    <div class="page" id="page-usage">
+      <div style="display:grid;grid-template-columns:380px 1fr;gap:20px">
+        <div>
+          <div class="card">
+            <div class="card-header" style="margin-bottom:14px">
+              <span class="card-title">บันทึกการใช้ Film</span>
+            </div>
+            <div class="form-group" style="margin-bottom:12px">
+              <label>เลือกม้วน Film *</label>
+              <select id="use-roll" onchange="updateRollInfo()">
+                <option value="">-- เลือกม้วน --</option>
+              </select>
+            </div>
+            <div id="roll-info-box"></div>
+            <div class="form-group" style="margin-bottom:12px">
+              <label>ลูกค้า / เจ้าของสินค้า *</label>
+              <input type="text" id="use-customer" placeholder="ชื่อลูกค้า">
+            </div>
+            <div class="form-group" style="margin-bottom:12px">
+              <label>Job Order *</label>
+              <input type="text" id="use-joborder" placeholder="เช่น JO-2025-001">
+            </div>
+            <div class="form-group" style="margin-bottom:12px">
+              <label>ชื่อสินค้า</label>
+              <input type="text" id="use-product" placeholder="ชื่อสินค้า">
+            </div>
+            <div class="form-grid" style="margin-bottom:12px">
+              <div class="form-group">
+                <label>ความยาวที่ใช้ (m) *</label>
+                <input type="number" id="use-length" min="0.1" step="0.1" placeholder="0.0" oninput="checkRemain()">
+              </div>
+              <div class="form-group">
+                <label>วันที่ใช้งาน</label>
+                <input type="date" id="use-date">
+              </div>
+            </div>
+            <div id="remain-warn"></div>
+            <div class="form-group" style="margin-bottom:14px">
+              <label>หมายเหตุ</label>
+              <input type="text" id="use-note" placeholder="หมายเหตุเพิ่มเติม">
+            </div>
+            <button class="btn btn-amber" style="width:100%" onclick="saveUsage()">บันทึกการใช้งาน</button>
+          </div>
+        </div>
+
+        <div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+            <div class="section-head" style="margin:0;flex:1">
+              <span class="section-title">ประวัติการใช้งาน</span>
+              <span class="section-count" id="usage-count">0</span>
+            </div>
+            <input type="text" id="usage-search" placeholder="ค้นหา ลูกค้า, JO, Lot..." style="width:220px" oninput="renderUsage()">
+          </div>
+          <div class="card" style="padding:0;overflow:hidden">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>วันที่</th>
+                    <th>Lot / หน้ากว้าง</th>
+                    <th>ลูกค้า</th>
+                    <th>Job Order</th>
+                    <th>สินค้า</th>
+                    <th>ใช้ (m)</th>
+                    <th>หมายเหตุ</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="usage-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SEARCH / MATCH -->
+    <div class="page" id="page-search">
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-title" style="margin-bottom:14px">หาม้วน Film ที่ใช้ได้</div>
+        <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
+          <div class="form-group" style="width:170px">
+            <label>หน้ากว้างที่ต้องการ (mm)</label>
+            <input type="number" id="search-width" placeholder="เช่น 350" min="1" step="1">
+          </div>
+          <div class="form-group" style="width:140px">
+            <label>ช่วงคลาดเคลื่อน (±mm)</label>
+            <input type="number" id="search-tol" value="10" min="0" step="1">
+          </div>
+          <div class="form-group" style="width:140px">
+            <label>ยาวขั้นต่ำ (m)</label>
+            <input type="number" id="search-min-len" placeholder="0" min="0" step="10">
+          </div>
+          <div class="form-group" style="width:150px">
+            <label>ประเภท Film</label>
+            <input type="text" id="search-type" placeholder="เช่น OPP20, CPP">
+          </div>
+          <div class="form-group" style="width:160px">
+            <label>เรียงตาม</label>
+            <select id="search-sort">
+              <option value="diff-asc">ใกล้เคียงที่สุด</option>
+              <option value="remain-desc">คงเหลือมาก→น้อย</option>
+              <option value="remain-asc">คงเหลือน้อย→มาก</option>
+              <option value="width-asc">หน้ากว้าง น้อย→มาก</option>
+              <option value="width-desc">หน้ากว้าง มาก→น้อย</option>
+              <option value="inhouse-desc">Stock ในบ้านมาก→น้อย</option>
+            </select>
+          </div>
+          <button class="btn btn-amber" onclick="searchFilm()">ค้นหา</button>
+          <button class="btn btn-outline" onclick="clearSearch()">ล้าง</button>
+        </div>
+      </div>
+
+      <div id="search-results"></div>
+
+      <hr class="divider">
+
+      <div class="section-head">
+        <span class="section-title">จัดกลุ่มตามหน้ากว้าง</span>
+      </div>
+      <div id="width-groups"></div>
+    </div>
+
+    <!-- RESERVE PAGE -->
+    <div class="page" id="page-reserve">
+      <div style="display:grid;grid-template-columns:380px 1fr;gap:20px">
+        <div>
+          <div class="card">
+            <div class="card-header" style="margin-bottom:14px">
+              <span class="card-title">จอง Film</span>
+            </div>
+            <div class="form-group" style="margin-bottom:12px">
+              <label>เลือกม้วน Film *</label>
+              <select id="res-roll" onchange="updateResInfo()">
+                <option value="">-- เลือกม้วน --</option>
+              </select>
+            </div>
+            <div id="res-roll-info"></div>
+            <div class="form-group" style="margin-bottom:12px">
+              <label>ลูกค้า / เจ้าของสินค้า *</label>
+              <input type="text" id="res-customer" placeholder="ชื่อลูกค้า">
+            </div>
+            <div class="form-group" style="margin-bottom:12px">
+              <label>Job Order *</label>
+              <input type="text" id="res-joborder" placeholder="เช่น JO-2025-001">
+            </div>
+            <div class="form-group" style="margin-bottom:12px">
+              <label>ชื่อสินค้า</label>
+              <input type="text" id="res-product" placeholder="ชื่อสินค้า">
+            </div>
+
+            <!-- Width mode toggle -->
+            <div style="background:var(--surface2);border-radius:var(--radius);padding:12px;margin-bottom:12px">
+              <div style="font-size:11px;font-weight:500;color:var(--text2);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.05em">ขนาดที่จอง</div>
+              <div style="display:flex;gap:8px;margin-bottom:10px">
+                <button id="mode-btn-full" onclick="setResMode('full')"
+                  style="flex:1;padding:7px;font-size:12px;border-radius:var(--radius);border:1.5px solid var(--amber);background:var(--amber);color:#fff;cursor:pointer;font-family:inherit;font-weight:500">
+                  ทั้งม้วน (ตามยาว)
+                </button>
+                <button id="mode-btn-partial" onclick="setResMode('partial')"
+                  style="flex:1;padding:7px;font-size:12px;border-radius:var(--radius);border:1.5px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;font-family:inherit">
+                  ระบุหน้ากว้าง
+                </button>
+              </div>
+
+              <!-- Full mode: ยาวอย่างเดียว -->
+              <div id="res-mode-full">
+                <div class="form-grid">
+                  <div class="form-group">
+                    <label>ความยาวที่จอง (m) *</label>
+                    <input type="number" id="res-length" min="0.1" step="0.1" placeholder="0.0" oninput="checkResRemain()">
+                  </div>
+                  <div class="form-group">
+                    <label>วันที่จอง</label>
+                    <input type="date" id="res-date">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Partial mode: กว้าง × ยาว -->
+              <div id="res-mode-partial" style="display:none">
+                <div class="form-grid" style="margin-bottom:8px">
+                  <div class="form-group">
+                    <label>หน้ากว้างที่ต้องการ (mm) *</label>
+                    <input type="number" id="res-width" min="1" step="1" placeholder="เช่น 500" oninput="checkResRemain()">
+                  </div>
+                  <div class="form-group">
+                    <label>ความยาว (m) *</label>
+                    <input type="number" id="res-length-p" min="0.1" step="0.1" placeholder="0.0" oninput="checkResRemain()">
+                  </div>
+                </div>
+                <div class="form-group" style="margin-bottom:0">
+                  <label>วันที่จอง</label>
+                  <input type="date" id="res-date-p">
+                </div>
+              </div>
+            </div>
+
+            <div id="res-preview" style="margin-bottom:10px"></div>
+            <div id="res-warn"></div>
+            <div class="form-group" style="margin-bottom:14px">
+              <label>หมายเหตุ</label>
+              <input type="text" id="res-note" placeholder="หมายเหตุเพิ่มเติม">
+            </div>
+            <button class="btn btn-amber" style="width:100%" onclick="saveReservation()">จอง Film</button>
+          </div>
+        </div>
+        <div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+            <div class="section-head" style="margin:0;flex:1">
+              <span class="section-title">รายการจอง (รอใช้)</span>
+              <span class="section-count" id="res-count">0</span>
+            </div>
+            <input type="text" id="res-search" placeholder="ค้นหา ลูกค้า, JO, Lot..." style="width:220px" oninput="renderReservations()">
+          </div>
+          <div id="res-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIT PAGE -->
+    <div class="page" id="page-slit">
+      <div style="display:grid;grid-template-columns:400px 1fr;gap:20px">
+        <div>
+          <div class="card">
+            <div class="card-header" style="margin-bottom:14px">
+              <span class="card-title">สลิต Film</span>
+            </div>
+            <div class="form-group" style="margin-bottom:12px">
+              <label>เลือกม้วนต้นฉบับ *</label>
+              <select id="slit-source-roll" onchange="updateSlitInfo()">
+                <option value="">-- เลือกม้วน --</option>
+              </select>
+            </div>
+            <div id="slit-source-info"></div>
+            <div class="form-grid" style="margin-bottom:12px">
+              <div class="form-group">
+                <label>หน้ากว้างที่ต้องการ (mm) *</label>
+                <input type="number" id="slit-target-width" min="1" step="1" placeholder="เช่น 300" oninput="calcSlit()">
+              </div>
+              <div class="form-group">
+                <label>ความยาวม้วนที่ต้องการ (m) *</label>
+                <input type="number" id="slit-length" min="1" step="1" placeholder="เช่น 1000" oninput="calcSlit()">
+              </div>
+            </div>
+            <div class="form-grid" style="margin-bottom:12px">
+              <div class="form-group">
+                <label>Lot prefix ม้วนใหม่</label>
+                <input type="text" id="slit-lot-prefix" placeholder="เช่น SLIT-001">
+              </div>
+              <div class="form-group">
+                <label>วันที่สลิต</label>
+                <input type="date" id="slit-date">
+              </div>
+            </div>
+            <div id="slit-preview"></div>
+            <button class="btn btn-amber" style="width:100%;margin-top:8px" onclick="doSlit()">ยืนยันการสลิต</button>
+          </div>
+        </div>
+        <div>
+          <div class="section-head">
+            <span class="section-title">ประวัติการสลิต</span>
+            <span class="section-count" id="slit-history-count">0</span>
+          </div>
+          <div class="card" style="padding:0;overflow:hidden">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>วันที่</th>
+                    <th>ต้นฉบับ</th>
+                    <th>สลิตเป็น</th>
+                    <th>จำนวน</th>
+                    <th>ยาว/ม้วน</th>
+                    <th>เหลือต้นฉบับ</th>
+                  </tr>
+                </thead>
+                <tbody id="slit-history-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ADD ROLL MODAL -->
+<div class="modal-overlay" id="modal-add-roll">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-add-roll')">✕</button>
+    <div class="modal-title">เพิ่มม้วน Film ใหม่</div>
+    <div class="form-grid" style="margin-bottom:12px">
+      <div class="form-group">
+        <label>Lot Number *</label>
+        <input type="text" id="add-lot" placeholder="เช่น LOT-2025-001">
+      </div>
+      <div class="form-group">
+        <label>วันที่รับ Film</label>
+        <input type="date" id="add-date">
+      </div>
+    </div>
+    <div class="form-grid" style="margin-bottom:12px">
+      <div class="form-group">
+        <label>หน้ากว้าง (mm) *</label>
+        <input type="number" id="add-width" placeholder="เช่น 350" min="1" step="1">
+      </div>
+      <div class="form-group">
+        <label>ประเภท Film</label>
+        <input type="text" id="add-type" placeholder="เช่น BOPP, CPP, PET">
+      </div>
+    </div>
+    <div style="background:var(--surface2);border-radius:var(--radius);padding:12px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:500;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em">Stock (m)</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Stock ในบ้าน (m)</label>
+          <input type="number" id="add-inhouse" placeholder="0" min="0" step="1" oninput="updateAddTotal()">
+        </div>
+        <div class="form-group">
+          <label>Stock Supplier (m)</label>
+          <input type="number" id="add-supplier-stock" placeholder="0" min="0" step="1" oninput="updateAddTotal()">
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+        <span style="font-size:12px;color:var(--text3)">รวมทั้งหมด</span>
+        <span id="add-total-display" style="font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:500;color:var(--green)">0 m</span>
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:16px">
+      <label>หมายเหตุ</label>
+      <input type="text" id="add-note" placeholder="หมายเหตุเพิ่มเติม">
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end">
+      <button class="btn btn-outline" onclick="closeModal('modal-add-roll')">ยกเลิก</button>
+      <button class="btn btn-amber" onclick="saveRoll()">บันทึกม้วน Film</button>
+    </div>
+  </div>
+</div>
+
+<!-- ROLL DETAIL MODAL -->
+<div class="modal-overlay" id="modal-roll-detail">
+  <div class="modal" style="width:600px">
+    <button class="modal-close" onclick="closeModal('modal-roll-detail')">✕</button>
+    <div id="roll-detail-content"></div>
+  </div>
+</div>
+
+<!-- RESERVATION ACTION MODAL -->
+<div class="modal-overlay" id="modal-res-action">
+  <div class="modal" style="width:480px">
+    <button class="modal-close" onclick="closeModal('modal-res-action')">✕</button>
+    <div id="res-action-content"></div>
+  </div>
+</div>
+
+<script>
+// ===== SUPABASE CONFIG =====
+const SB_URL = 'https://ujnuhgwmsvbtnnzxsnhg.supabase.co';
+const SB_KEY = 'sb_publishable_qsO4FtWtwIaHXIc32wAVOg_vjqavHJt';
+
+async function sbFetch(path, options = {}) {
+  const res = await fetch(`${SB_URL}/rest/v1/${path}`, {
+    ...options,
+    headers: {
+      'apikey': SB_KEY,
+      'Authorization': `Bearer ${SB_KEY}`,
+      'Content-Type': 'application/json',
+      'Prefer': options.method === 'POST' ? 'return=representation' : undefined,
+      ...options.headers
+    }
+  });
+  if (!res.ok) { const t = await res.text(); throw new Error(t); }
+  const text = await res.text();
+  return text ? JSON.parse(text) : [];
+}
+
+// ===== MAPPING =====
+function dbToRoll(r) { return { id:r.id, lotNumber:r.lot_number, width:Number(r.width), totalLength:Number(r.total_length), supplier:r.supplier||'', filmType:r.film_type||'', note:r.note||'', date:r.date||'', stockInhouse:Number(r.stock_inhouse||0), stockSupplier:Number(r.stock_supplier||0), createdAt:r.created_at||0 }; }
+function rollToDb(r) { return { id:r.id, lot_number:r.lotNumber, width:r.width, total_length:r.totalLength, supplier:r.supplier, film_type:r.filmType, note:r.note, date:r.date, stock_inhouse:r.stockInhouse||0, stock_supplier:r.stockSupplier||0, created_at:r.createdAt }; }
+function dbToUsage(u) { return { id:u.id, rollId:u.roll_id, customer:u.customer, jobOrder:u.job_order||'', product:u.product||'', length:Number(u.length), date:u.date||'', note:u.note||'', createdAt:u.created_at||0 }; }
+function usageToDb(u) { return { id:u.id, roll_id:u.rollId, customer:u.customer, job_order:u.jobOrder||'', product:u.product, length:u.length, date:u.date, note:u.note, created_at:u.createdAt }; }
+function dbToSlit(s) { return { id:s.id, sourceRollId:s.source_roll_id, sourceRollLot:s.source_roll_lot, sourceWidthBefore:Number(s.source_width_before), sourceWidthAfter:Number(s.source_width_after), sourceLengthUnchanged:Number(s.source_length_unchanged), slitWidth:Number(s.slit_width), slitLength:Number(s.slit_length), stripRemainder:Number(s.strip_remainder||0), numNewRolls:s.num_new_rolls, newRollIds:s.new_roll_ids||[], date:s.date||'', createdAt:s.created_at||0 }; }
+function slitToDb(s) { return { id:s.id, source_roll_id:s.sourceRollId, source_roll_lot:s.sourceRollLot, source_width_before:s.sourceWidthBefore, source_width_after:s.sourceWidthAfter, source_length_unchanged:s.sourceLengthUnchanged, slit_width:s.slitWidth, slit_length:s.slitLength, strip_remainder:s.stripRemainder, num_new_rolls:s.numNewRolls, new_roll_ids:s.newRollIds, date:s.date, created_at:s.createdAt }; }
+
+function dbToRes(r) { return { id:r.id, rollId:r.roll_id, customer:r.customer, jobOrder:r.job_order||'', product:r.product||'', length:Number(r.length), reservedWidth:Number(r.reserved_width||0), date:r.date||'', note:r.note||'', status:r.status||'reserved', createdAt:r.created_at||0 }; }
+function resToDb(r) { return { id:r.id, roll_id:r.rollId, customer:r.customer, job_order:r.jobOrder||'', product:r.product, length:r.length, reserved_width:r.reservedWidth||0, date:r.date, note:r.note, status:r.status, created_at:r.createdAt }; }
+
+// ===== STATE =====
+let rolls = [];
+let usages = [];
+let slits = [];
+let reservations = [];
+
+// ===== LOAD =====
+async function loadData() {
+  showLoadingOverlay(true);
+  try {
+    const [r, u, s, rv] = await Promise.all([
+      sbFetch('film_rolls?select=*&order=created_at.asc'),
+      sbFetch('film_usages?select=*&order=created_at.asc'),
+      sbFetch('film_slits?select=*&order=created_at.asc'),
+      sbFetch('film_reservations?select=*&order=created_at.asc')
+    ]);
+    rolls = r.map(dbToRoll);
+    usages = u.map(dbToUsage);
+    slits = s.map(dbToSlit);
+    reservations = rv.map(dbToRes);
+  } catch(e) {
+    showAlert('เชื่อมต่อ Supabase ไม่ได้: ' + e.message, 'error');
+  }
+  showLoadingOverlay(false);
+  renderAll();
+}
+
+function showLoadingOverlay(show) {
+  let el = document.getElementById('loading-overlay');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'loading-overlay';
+    el.style.cssText = 'position:fixed;inset:0;background:rgba(255,255,255,0.8);display:flex;align-items:center;justify-content:center;z-index:999;font-size:14px;color:var(--text2)';
+    el.innerHTML = 'กำลังโหลดข้อมูลจาก Supabase...';
+    document.body.appendChild(el);
+  }
+  el.style.display = show ? 'flex' : 'none';
+}
+
+// Auto-refresh ทุก 30 วินาที
+setInterval(loadData, 30000);
+
+// ===== HELPERS =====
+function uuid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+function getRollUsed(rollId) {
+  return usages.filter(u => u.rollId === rollId).reduce((s, u) => s + u.length, 0);
+}
+
+function getRollReserved(rollId) {
+  // นับเฉพาะการจองแบบ "ทั้งม้วน" (ไม่ระบุกว้าง) เท่านั้น
+  // การจองแบบระบุกว้าง ไม่ได้ทำให้ความยาวหายไป แค่ลดหน้ากว้างที่ว่าง
+  return reservations
+    .filter(r => r.rollId === rollId && r.status === 'reserved' && !(r.reservedWidth > 0))
+    .reduce((s, r) => s + r.length, 0);
+}
+
+function getRollRemain(roll) {
+  return Math.max(0, roll.totalLength - getRollUsed(roll.id) - getRollReserved(roll.id));
+}
+
+function getRollFreeRemain(roll) {
+  // ยอดคงเหลือที่ยังไม่ถูกจอง (ใช้คำนวณว่าจองได้อีกเท่าไหร่)
+  return Math.max(0, roll.totalLength - getRollUsed(roll.id) - getRollReserved(roll.id));
+}
+
+function getStatus(roll) {
+  const reserved = getRollReserved(roll.id);
+  const used = getRollUsed(roll.id);
+  const free = roll.totalLength - used - reserved;
+  const pct = free / roll.totalLength;
+  if (roll.totalLength - used <= 0.001) return 'empty';
+  if (pct <= 0.001) return 'reserved'; // หมดแล้วแต่มีจอง
+  if (pct <= 0.2) return 'warn';
+  return 'ok';
+}
+
+function statusBadge(status) {
+  if (status === 'ok') return '<span class="badge badge-green">พร้อมใช้</span>';
+  if (status === 'warn') return '<span class="badge badge-amber">ใกล้หมด</span>';
+  if (status === 'reserved') return '<span class="badge" style="background:#EDE9FE;color:#5B21B6">จองเต็ม</span>';
+  return '<span class="badge badge-red">หมดแล้ว</span>';
+}
+
+function fmt(n, d=1) { return Number(n).toLocaleString('th-TH', {minimumFractionDigits:d,maximumFractionDigits:d}); }
+function fmtDate(s) { if(!s) return '-'; const d=new Date(s); return d.toLocaleDateString('th-TH',{day:'2-digit',month:'short',year:'2-digit'}); }
+function today() { return new Date().toISOString().split('T')[0]; }
+
+function showAlert(msg, type='success') {
+  const box = document.getElementById('alert-box');
+  box.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+  setTimeout(() => { box.innerHTML = ''; }, 3000);
+}
+
+// ===== NAVIGATION =====
+function goPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.querySelector(`[data-page="${id}"]`).classList.add('active');
+  renderAll();
+}
+
+// ===== MODALS =====
+function openAddRoll() {
+  document.getElementById('add-lot').value = '';
+  document.getElementById('add-width').value = '';
+  document.getElementById('add-inhouse').value = '';
+  document.getElementById('add-supplier-stock').value = '';
+  document.getElementById('add-type').value = '';
+  document.getElementById('add-note').value = '';
+  document.getElementById('add-date').value = today();
+  const el = document.getElementById('add-total-display');
+  if (el) el.textContent = '0 m';
+  document.getElementById('modal-add-roll').classList.add('open');
+}
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+// ===== SAVE ROLL =====
+async function saveRoll() {
+  const lot = document.getElementById('add-lot').value.trim();
+  const width = parseFloat(document.getElementById('add-width').value);
+  const inhouse = parseFloat(document.getElementById('add-inhouse').value) || 0;
+  const supplierStock = parseFloat(document.getElementById('add-supplier-stock').value) || 0;
+  const total = inhouse + supplierStock;
+  if (!lot || !width || total <= 0) { showAlert('กรุณากรอก Lot, หน้ากว้าง และ Stock อย่างน้อย 1 ช่อง', 'error'); return; }
+  const roll = {
+    id: uuid(), lotNumber: lot, width, totalLength: total,
+    stockInhouse: inhouse, stockSupplier: supplierStock,
+    supplier: '', filmType: document.getElementById('add-type').value.trim(),
+    note: document.getElementById('add-note').value.trim(),
+    date: document.getElementById('add-date').value || today(),
+    createdAt: Date.now()
+  };
+  try {
+    await sbFetch('film_rolls', { method:'POST', body: JSON.stringify(rollToDb(roll)) });
+    rolls.push(roll);
+    closeModal('modal-add-roll');
+    showAlert('เพิ่มม้วน Film "' + lot + '" เรียบร้อย');
+    renderAll();
+  } catch(e) { showAlert('บันทึกไม่สำเร็จ: ' + e.message, 'error'); }
+}
+
+function updateAddTotal() {
+  const h = parseFloat(document.getElementById('add-inhouse').value) || 0;
+  const s = parseFloat(document.getElementById('add-supplier-stock').value) || 0;
+  const el = document.getElementById('add-total-display');
+  if (el) el.textContent = fmt(h + s, 0) + ' m';
+}
+
+// ===== SAVE USAGE =====
+async function saveUsage() {
+  const rollId = document.getElementById('use-roll').value;
+  const customer = document.getElementById('use-customer').value.trim();
+  const length = parseFloat(document.getElementById('use-length').value);
+  if (!rollId || !customer || !length) { showAlert('กรุณาเลือกม้วน, ลูกค้า และความยาว', 'error'); return; }
+  const roll = rolls.find(r => r.id === rollId);
+  if (!roll) { showAlert('ไม่พบม้วน Film', 'error'); return; }
+  const remain = getRollRemain(roll);
+  if (length > remain) { showAlert(`ความยาวที่ใช้เกินคงเหลือ (${fmt(remain)} m)`, 'error'); return; }
+  const usage = {
+    id:uuid(), rollId, customer,
+    jobOrder: document.getElementById('use-joborder').value.trim(),
+    product: document.getElementById('use-product').value.trim(),
+    length,
+    date: document.getElementById('use-date').value||today(),
+    note: document.getElementById('use-note').value.trim(),
+    createdAt: Date.now()
+  };
+  try {
+    await sbFetch('film_usages', { method:'POST', body: JSON.stringify(usageToDb(usage)) });
+    usages.push(usage);
+    document.getElementById('use-customer').value = '';
+    document.getElementById('use-joborder').value = '';
+    document.getElementById('use-product').value = '';
+    document.getElementById('use-length').value = '';
+    document.getElementById('use-note').value = '';
+    document.getElementById('remain-warn').innerHTML = '';
+    showAlert(`บันทึกการใช้ Film ${fmt(length)} m สำหรับ "${customer}" เรียบร้อย`);
+    renderAll();
+  } catch(e) { showAlert('บันทึกไม่สำเร็จ: ' + e.message, 'error'); }
+}
+
+// ===== DELETE =====
+async function deleteRoll(id) {
+  if (!confirm('ลบม้วน Film นี้? ประวัติการใช้งานจะถูกลบด้วย')) return;
+  try {
+    await sbFetch(`film_rolls?id=eq.${id}`, { method:'DELETE' });
+    rolls = rolls.filter(r => r.id !== id);
+    usages = usages.filter(u => u.rollId !== id);
+    renderAll();
+  } catch(e) { showAlert('ลบไม่สำเร็จ: ' + e.message, 'error'); }
+}
+async function deleteUsage(id) {
+  if (!confirm('ลบรายการนี้?')) return;
+  try {
+    await sbFetch(`film_usages?id=eq.${id}`, { method:'DELETE' });
+    usages = usages.filter(u => u.id !== id);
+    renderAll();
+  } catch(e) { showAlert('ลบไม่สำเร็จ: ' + e.message, 'error'); }
+}
+
+// ===== ROLL INFO =====
+function updateRollInfo() {
+  const rollId = document.getElementById('use-roll').value;
+  const box = document.getElementById('roll-info-box');
+  if (!rollId) { box.innerHTML = ''; document.getElementById('remain-warn').innerHTML = ''; return; }
+  const roll = rolls.find(r => r.id === rollId);
+  if (!roll) { box.innerHTML = ''; return; }
+  const used = getRollUsed(roll.id);
+  const remain = getRollRemain(roll);
+  const pct = (remain / roll.totalLength * 100).toFixed(1);
+  box.innerHTML = `
+    <div style="background:var(--surface2);border-radius:var(--radius);padding:10px 12px;margin-bottom:12px;font-size:12px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+        <span style="color:var(--text2)">คงเหลือ</span>
+        <span class="mono" style="font-weight:500">${fmt(remain)} m / ${fmt(roll.totalLength)} m</span>
+      </div>
+      <div class="progress-wrap" style="width:100%">
+        <div class="progress-bar ${pct>50?'progress-ok':pct>20?'progress-warn':'progress-low'}" style="width:${pct}%"></div>
+      </div>
+      <div style="color:var(--text3);margin-top:4px">${pct}% คงเหลือ · ใช้ไปแล้ว ${fmt(used)} m</div>
+    </div>
+  `;
+}
+
+function checkRemain() {
+  const rollId = document.getElementById('use-roll').value;
+  const length = parseFloat(document.getElementById('use-length').value) || 0;
+  const box = document.getElementById('remain-warn');
+  if (!rollId || !length) { box.innerHTML = ''; return; }
+  const roll = rolls.find(r => r.id === rollId);
+  if (!roll) return;
+  const remain = getRollRemain(roll);
+  const after = remain - length;
+  if (after < 0) {
+    box.innerHTML = `<div class="alert alert-error" style="margin-bottom:10px">เกินคงเหลือ! ขาดอีก ${fmt(Math.abs(after))} m</div>`;
+  } else if (after < roll.totalLength * 0.1) {
+    box.innerHTML = `<div class="alert alert-info" style="margin-bottom:10px">หลังใช้จะเหลือ ${fmt(after)} m (${(after/roll.totalLength*100).toFixed(1)}%) — ใกล้หมดแล้ว</div>`;
+  } else {
+    box.innerHTML = `<div class="alert alert-success" style="margin-bottom:10px">หลังใช้จะเหลือ ${fmt(after)} m (${(after/roll.totalLength*100).toFixed(1)}%)</div>`;
+  }
+}
+
+// ===== DETAIL MODAL =====
+function showRollDetail(id) {
+  const roll = rolls.find(r => r.id === id);
+  if (!roll) return;
+  const used = getRollUsed(id);
+  const remain = getRollRemain(roll);
+  const pct = (remain / roll.totalLength * 100).toFixed(1);
+  const rollUsages = usages.filter(u => u.rollId === id).sort((a,b) => b.createdAt - a.createdAt);
+  document.getElementById('roll-detail-content').innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+      <span class="width-tag">${roll.width} mm</span>
+      <span style="font-size:16px;font-weight:600">${roll.lotNumber}</span>
+      ${statusBadge(getStatus(roll))}
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px">
+      <div style="background:var(--surface2);border-radius:var(--radius);padding:10px">
+        <div style="font-size:11px;color:var(--text3);margin-bottom:2px">รับมา</div>
+        <div class="mono" style="font-size:18px;font-weight:500">${fmt(roll.totalLength,0)} <span style="font-size:11px;color:var(--text3)">m</span></div>
+      </div>
+      <div style="background:var(--surface2);border-radius:var(--radius);padding:10px">
+        <div style="font-size:11px;color:var(--text3);margin-bottom:2px">ใช้ไปแล้ว</div>
+        <div class="mono" style="font-size:18px;font-weight:500">${fmt(used,0)} <span style="font-size:11px;color:var(--text3)">m</span></div>
+      </div>
+      <div style="background:${remain<=0?'var(--red-bg)':remain<roll.totalLength*0.2?'var(--amber-bg)':'var(--green-bg)'};border-radius:var(--radius);padding:10px">
+        <div style="font-size:11px;color:var(--text3);margin-bottom:2px">คงเหลือ</div>
+        <div class="mono" style="font-size:18px;font-weight:500">${fmt(remain,0)} <span style="font-size:11px;color:var(--text3)">m</span></div>
+      </div>
+    </div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:14px">
+      ${roll.filmType?`ประเภท: <strong>${roll.filmType}</strong> &nbsp;·&nbsp; `:''}
+      ${roll.supplier?`Supplier: <strong>${roll.supplier}</strong> &nbsp;·&nbsp; `:''}
+      วันที่รับ: ${fmtDate(roll.date)}
+      ${roll.note?`<br>หมายเหตุ: ${roll.note}`:''}
+    </div>
+    <div style="font-weight:600;font-size:13px;margin-bottom:8px">ประวัติการใช้งาน (${rollUsages.length} รายการ)</div>
+    ${rollUsages.length === 0 ? '<div class="empty" style="padding:16px">ยังไม่มีการใช้งาน</div>' :
+      rollUsages.map(u => `
+        <div class="usage-item">
+          <div class="usage-dot"></div>
+          <div style="flex:1">
+            <span style="font-weight:500">${u.customer}</span>
+            ${u.product?`<span style="color:var(--text3)"> · ${u.product}</span>`:''}
+          </div>
+          <span class="mono" style="font-weight:500">${fmt(u.length)} m</span>
+          <span style="color:var(--text3);font-size:11px">${fmtDate(u.date)}</span>
+        </div>
+      `).join('')}
+  `;
+  document.getElementById('modal-roll-detail').classList.add('open');
+}
+
+// ===== SEARCH =====
+function searchFilm() {
+  const width   = parseFloat(document.getElementById('search-width').value);
+  const tol     = parseFloat(document.getElementById('search-tol').value) || 10;
+  const minLen  = parseFloat(document.getElementById('search-min-len').value) || 0;
+  const typeQ   = (document.getElementById('search-type').value || '').toLowerCase().trim();
+  const sortBy  = document.getElementById('search-sort').value;
+
+  // ถ้าไม่กรอกหน้ากว้าง ค้นหาตาม type อย่างเดียวก็ได้
+  let matches = rolls.filter(r => {
+    const remain = getRollRemain(r);
+    const matchW = !width || Math.abs(r.width - width) <= tol;
+    const matchL = remain >= minLen;
+    const matchT = !typeQ || (r.filmType||'').toLowerCase().includes(typeQ) || r.lotNumber.toLowerCase().includes(typeQ);
+    return matchW && matchL && matchT;
+  });
+
+  matches.sort((a, b) => {
+    const remA = getRollRemain(a), remB = getRollRemain(b);
+    if (sortBy === 'diff-asc')      return Math.abs(a.width-(width||a.width)) - Math.abs(b.width-(width||b.width));
+    if (sortBy === 'remain-desc')   return remB - remA;
+    if (sortBy === 'remain-asc')    return remA - remB;
+    if (sortBy === 'width-asc')     return a.width - b.width;
+    if (sortBy === 'width-desc')    return b.width - a.width;
+    if (sortBy === 'inhouse-desc')  return (b.stockInhouse||0) - (a.stockInhouse||0);
+    return 0;
+  });
+
+  const box = document.getElementById('search-results');
+  if (matches.length === 0) {
+    box.innerHTML = '<div class="card"><div class="empty">ไม่พบม้วน Film ที่ตรงเงื่อนไข</div></div>';
+    return;
+  }
+
+  const label = width ? 'พบ ' + matches.length + ' ม้วน ในช่วง ' + (width-tol) + '–' + (width+tol) + ' mm' : 'พบ ' + matches.length + ' ม้วน';
+  box.innerHTML =
+    '<div class="alert alert-info" style="margin-bottom:12px">' + label + '</div>' +
+    '<div class="card" style="padding:0">' +
+    '<div class="table-wrap"><table>' +
+    '<thead><tr>' +
+    '<th>Lot / ประเภท</th>' +
+    '<th>หน้ากว้าง</th>' +
+    (width ? '<th>ต่างจากที่ต้องการ</th>' : '') +
+    '<th>ในบ้าน (m)</th>' +
+    '<th>Supplier (m)</th>' +
+    '<th>รวม (m)</th>' +
+    '<th>จอง (m)</th>' +
+    '<th>ว่าง (m)</th>' +
+    '<th>สถานะ</th>' +
+    '<th></th>' +
+    '</tr></thead><tbody>' +
+    matches.map(r => {
+      const remain   = getRollRemain(r);
+      const reserved = getRollReserved(r.id);
+      const diff     = width ? (r.width - width) : 0;
+      const diffLabel = !width ? '' :
+        diff === 0 ? '<span style="color:var(--green);font-weight:500">ตรงเป๊ะ</span>' :
+        '<span style="color:var(--amber)">' + (diff > 0 ? '+' : '') + diff + ' mm</span>';
+      return '<tr>' +
+        '<td><span class="mono" style="font-size:12px;font-weight:500">' + r.lotNumber + '</span>' +
+          (r.filmType ? '<div style="font-size:11px;color:var(--text3)">' + r.filmType + '</div>' : '') +
+        '</td>' +
+        '<td><span class="width-tag">' + r.width + ' mm</span></td>' +
+        (width ? '<td style="text-align:center">' + diffLabel + '</td>' : '') +
+        '<td class="mono" style="color:' + ((r.stockInhouse||0)>0?'var(--green)':'var(--text3)') + '">' + ((r.stockInhouse||0)>0 ? fmt(r.stockInhouse,0) : '—') + '</td>' +
+        '<td class="mono" style="color:' + ((r.stockSupplier||0)>0?'var(--blue)':'var(--text3)') + '">' + ((r.stockSupplier||0)>0 ? fmt(r.stockSupplier,0) : '—') + '</td>' +
+        '<td class="mono">' + fmt(r.totalLength,0) + '</td>' +
+        '<td class="mono" style="color:var(--amber)">' + (reserved>0 ? fmt(reserved,0) : '—') + '</td>' +
+        '<td class="mono" style="font-weight:500;color:' + (remain>0?'var(--green)':'var(--red)') + '">' + fmt(remain,0) + '</td>' +
+        '<td>' + statusBadge(getStatus(r)) + '</td>' +
+        '<td><button class="btn btn-sm btn-outline" onclick="showRollDetail(\'' + r.id + '\')">ดู</button></td>' +
+        '</tr>';
+    }).join('') +
+    '</tbody></table></div></div>';
+}
+
+function clearSearch() {
+  document.getElementById('search-width').value = '';
+  document.getElementById('search-tol').value = '10';
+  document.getElementById('search-min-len').value = '';
+  document.getElementById('search-type').value = '';
+  document.getElementById('search-results').innerHTML = '';
+}
+
+// ===== RENDER FUNCTIONS =====
+function renderAll() {
+  renderDashboard();
+  renderRolls();
+  renderUsage();
+  renderWidthGroups();
+  renderSlitHistory();
+  renderReservations();
+  populateRollSelect();
+  populateSlitSelect();
+  populateResSelect();
+  // update reserve badge
+  const active = reservations.filter(r => r.status === 'reserved').length;
+  const badge = document.getElementById('reserve-badge');
+  if (badge) { badge.style.display = active > 0 ? 'inline' : 'none'; badge.textContent = active; }
+}
+
+function renderDashboard() {
+  const totalRolls = rolls.length;
+  const totalLen = rolls.reduce((s,r) => s + r.totalLength, 0);
+  const totalRemain = rolls.reduce((s,r) => s + getRollRemain(r), 0);
+  const totalUsed = rolls.reduce((s,r) => s + getRollUsed(r.id), 0);
+  const lowRolls = rolls.filter(r => getStatus(r) === 'warn');
+  const emptyRolls = rolls.filter(r => getStatus(r) === 'empty');
+
+  document.getElementById('stats-grid').innerHTML = `
+    <div class="stat-card">
+      <div class="stat-label">ม้วน Film ทั้งหมด</div>
+      <div class="stat-value">${totalRolls}<span class="stat-unit">ม้วน</span></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">คงเหลือรวม</div>
+      <div class="stat-value">${fmt(totalRemain,0)}<span class="stat-unit">m</span></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">ใช้ไปแล้วรวม</div>
+      <div class="stat-value">${fmt(totalUsed,0)}<span class="stat-unit">m</span></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">ใกล้หมด / หมดแล้ว</div>
+      <div class="stat-value">${lowRolls.length+emptyRolls.length}<span class="stat-unit">ม้วน</span></div>
+    </div>
+  `;
+
+  const lowAll = [...lowRolls, ...emptyRolls];
+  document.getElementById('low-count').textContent = lowAll.length + ' ม้วน';
+  document.getElementById('low-rolls').innerHTML = lowAll.length === 0
+    ? '<div class="empty">ไม่มีม้วนที่ใกล้หมด</div>'
+    : lowAll.map(r => `
+      <div class="usage-item">
+        <div class="usage-dot" style="background:${getStatus(r)==='warn'?'var(--amber)':'var(--red)'}"></div>
+        <span class="width-tag" style="font-size:11px">${r.width}mm</span>
+        <span style="flex:1;font-size:13px">${r.lotNumber}</span>
+        <span class="mono" style="font-size:12px">${fmt(getRollRemain(r))} m</span>
+        ${statusBadge(getStatus(r))}
+      </div>`).join('');
+
+  const recentU = [...usages].sort((a,b) => b.createdAt - a.createdAt).slice(0,6);
+  document.getElementById('recent-usage').innerHTML = recentU.length === 0
+    ? '<div class="empty">ยังไม่มีประวัติการใช้งาน</div>'
+    : recentU.map(u => {
+        const roll = rolls.find(r => r.id === u.rollId);
+        return `
+          <div class="usage-item">
+            <div class="usage-dot"></div>
+            ${roll ? `<span class="width-tag" style="font-size:11px">${roll.width}mm</span>` : ''}
+            <span style="flex:1">${u.customer}${u.product?` · ${u.product}`:''}</span>
+            <span class="mono">${fmt(u.length)} m</span>
+            <span style="color:var(--text3);font-size:11px">${fmtDate(u.date)}</span>
+          </div>`;}).join('');
+}
+
+function renderRolls() {
+  const q = (document.getElementById('roll-search')?.value || '').toLowerCase();
+  const filterStatus = document.getElementById('roll-filter-status')?.value || '';
+  const sortBy = document.getElementById('roll-sort')?.value || 'date-desc';
+
+  let filtered = rolls.filter(r => {
+    const matchQ = !q || r.lotNumber.toLowerCase().includes(q) || String(r.width).includes(q) || (r.supplier||'').toLowerCase().includes(q) || (r.note||'').toLowerCase().includes(q);
+    const matchS = !filterStatus || getStatus(r) === filterStatus;
+    return matchQ && matchS;
+  });
+  filtered.sort((a,b) => {
+    if (sortBy === 'date-asc') return new Date(a.date) - new Date(b.date);
+    if (sortBy === 'date-desc') return new Date(b.date) - new Date(a.date);
+    if (sortBy === 'width-asc') return a.width - b.width;
+    if (sortBy === 'width-desc') return b.width - a.width;
+    if (sortBy === 'remain-asc') return getRollRemain(a) - getRollRemain(b);
+    return 0;
+  });
+
+  const countEl = document.getElementById('rolls-count');
+  if (countEl) countEl.textContent = filtered.length;
+  const grid = document.getElementById('rolls-grid');
+  if (!grid) return;
+
+  if (filtered.length === 0) {
+    grid.innerHTML = '<div class="card"><div class="empty">ไม่พบม้วน Film</div></div>';
+    return;
+  }
+
+  grid.innerHTML = `
+  <div class="card" style="padding:0;overflow:hidden">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Lot No.</th>
+            <th>หน้ากว้าง</th>
+            <th>ในบ้าน (m)</th>
+            <th>Supplier (m)</th>
+            <th>รวม (m)</th>
+            <th>จอง (m)</th>
+            <th>ว่าง / คงเหลือ</th>
+            <th style="width:110px">สัดส่วน</th>
+            <th>สลิตจาก</th>
+            <th>สถานะ</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+        ${filtered.map(r => {
+          const used = getRollUsed(r.id);
+          const reserved = getRollReserved(r.id);
+          const remain = getRollRemain(r);
+          const pct = r.totalLength > 0 ? Math.round(remain / r.totalLength * 100) : 0;
+          const pctUsed = r.totalLength > 0 ? Math.round((used / r.totalLength) * 100) : 0;
+          const pctRes  = r.totalLength > 0 ? Math.round((reserved / r.totalLength) * 100) : 0;
+          const status = getStatus(r);
+          const slitOrigin = slits.find(s => s.newRollIds && s.newRollIds.includes(r.id));
+          const inhouse  = r.stockInhouse  || 0;
+          const supplier = r.stockSupplier || 0;
+          return `<tr>
+            <td>
+              <div class="mono" style="font-weight:500">${r.lotNumber}</div>
+              ${r.filmType ? `<div style="font-size:11px;color:var(--text3)">${r.filmType}</div>` : ''}
+            </td>
+            <td><span class="width-tag">${r.width} mm</span></td>
+            <td class="mono" style="color:${inhouse>0?'var(--green)':'var(--text3)'}">
+              ${inhouse > 0 ? fmt(inhouse,0) : '—'}
+            </td>
+            <td class="mono" style="color:${supplier>0?'var(--blue)':'var(--text3)'}">
+              ${supplier > 0 ? fmt(supplier,0) : '—'}
+            </td>
+            <td class="mono" style="font-weight:500">${fmt(r.totalLength,0)}</td>
+            <td>
+              ${reserved > 0
+                ? `<span class="mono" style="color:var(--amber);font-weight:500">${fmt(reserved,0)}</span>`
+                : `<span style="color:var(--text3)">—</span>`}
+            </td>
+            <td>
+              <span class="mono" style="font-weight:500;font-size:15px;color:${pct>50?'var(--green)':pct>20?'var(--amber)':'var(--red)'}">${fmt(remain,0)}</span>
+              <span style="font-size:11px;color:var(--text3)"> m</span>
+            </td>
+            <td>
+              <div style="display:flex;height:7px;border-radius:4px;overflow:hidden;background:var(--border)">
+                <div style="width:${pctUsed}%;background:var(--text3)"></div>
+                <div style="width:${pctRes}%;background:var(--amber)"></div>
+                <div style="width:${pct}%;background:${pct>50?'var(--green)':pct>20?'var(--amber)':'var(--red)'}"></div>
+              </div>
+              <div style="font-size:10px;color:var(--text3);margin-top:2px">เหลือ ${pct}%</div>
+            </td>
+            <td style="font-size:12px">
+              ${slitOrigin
+                ? `<span style="color:var(--amber)">✂</span> <span class="mono" style="font-size:11px">${slitOrigin.sourceRollLot}</span><div style="font-size:10px;color:var(--text3)">${slitOrigin.sourceWidthBefore}→${slitOrigin.sourceWidthAfter}mm</div>`
+                : '<span style="color:var(--text3)">—</span>'}
+            </td>
+            <td>${statusBadge(status)}</td>
+            <td>
+              <div style="display:flex;gap:4px">
+                <button class="btn btn-sm btn-outline" onclick="showRollDetail('${r.id}')">ดู</button>
+                <button class="btn btn-sm btn-danger" onclick="deleteRoll('${r.id}')">ลบ</button>
+              </div>
+            </td>
+          </tr>`;
+        }).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function renderUsage() {
+  const q = (document.getElementById('usage-search')?.value || '').toLowerCase();
+  let sorted = [...usages].sort((a,b) => b.createdAt - a.createdAt);
+  if (q) sorted = sorted.filter(u => {
+    const roll = rolls.find(r => r.id === u.rollId);
+    return u.customer.toLowerCase().includes(q) ||
+      (u.jobOrder||'').toLowerCase().includes(q) ||
+      (u.product||'').toLowerCase().includes(q) ||
+      (roll?.lotNumber||'').toLowerCase().includes(q) ||
+      (u.note||'').toLowerCase().includes(q);
+  });
+  const countEl = document.getElementById('usage-count');
+  if (countEl) countEl.textContent = sorted.length;
+  const tbody = document.getElementById('usage-tbody');
+  if (!tbody) return;
+  if (sorted.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="8"><div class="empty">ยังไม่มีประวัติการใช้งาน</div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = sorted.map(u => {
+    const roll = rolls.find(r => r.id === u.rollId);
+    return `<tr>
+      <td style="color:var(--text2);white-space:nowrap">${fmtDate(u.date)}</td>
+      <td>${roll?`<span class="mono" style="font-size:12px">${roll.lotNumber}</span><br><span class="width-tag" style="font-size:10px">${roll.width}mm</span>`:'<span style="color:var(--red)">ลบแล้ว</span>'}</td>
+      <td style="font-weight:500">${u.customer}</td>
+      <td><span class="mono" style="font-size:12px;color:var(--blue)">${u.jobOrder||'—'}</span></td>
+      <td style="color:var(--text2)">${u.product||'—'}</td>
+      <td class="mono" style="font-weight:500">${fmt(u.length)} m</td>
+      <td style="color:var(--text3);font-size:12px">${u.note||'—'}</td>
+      <td><button class="btn btn-sm btn-danger" onclick="deleteUsage('${u.id}')">ลบ</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function populateRollSelect() {
+  const sel = document.getElementById('use-roll');
+  if (!sel) return;
+  const val = sel.value;
+  const available = rolls.filter(r => getRollRemain(r) > 0).sort((a,b) => a.width - b.width);
+  sel.innerHTML = '<option value="">-- เลือกม้วน Film --</option>' +
+    available.map(r => {
+      const remain = fmt(getRollRemain(r), 0);
+      return `<option value="${r.id}" ${val===r.id?'selected':''}>[${r.width}mm] ${r.lotNumber} — เหลือ ${remain} m</option>`;
+    }).join('');
+  if (val) updateRollInfo();
+}
+
+function renderWidthGroups() {
+  const box = document.getElementById('width-groups');
+  if (!box) return;
+  const groups = {};
+  rolls.forEach(r => {
+    const key = r.width;
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(r);
+  });
+  const widths = Object.keys(groups).map(Number).sort((a,b) => a-b);
+  if (widths.length === 0) { box.innerHTML = '<div class="empty">ยังไม่มีข้อมูล</div>'; return; }
+  box.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px">` +
+    widths.map(w => {
+      const items = groups[w];
+      const totalRemain = items.reduce((s,r) => s + getRollRemain(r), 0);
+      return `<div class="card">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <span class="width-tag">${w} mm</span>
+          <span style="font-size:13px;font-weight:500">${items.length} ม้วน</span>
+          <span style="margin-left:auto;color:var(--text2);font-size:12px">รวม <span class="mono">${fmt(totalRemain,0)} m</span></span>
+        </div>
+        ${items.map(r => `
+          <div style="display:flex;align-items:center;gap:8px;font-size:12px;padding:5px 0;border-bottom:1px solid var(--border)">
+            <span class="mono" style="flex:1">${r.lotNumber}</span>
+            <span class="mono">${fmt(getRollRemain(r),0)} m</span>
+            ${statusBadge(getStatus(r))}
+          </div>`).join('')}
+      </div>`;
+    }).join('') + '</div>';
+}
+
+// ===== SLIT FUNCTIONS =====
+function populateSlitSelect() {
+  const sel = document.getElementById('slit-source-roll');
+  if (!sel) return;
+  const val = sel.value;
+  const available = rolls.filter(r => getRollRemain(r) > 0).sort((a,b) => a.width - b.width);
+  sel.innerHTML = '<option value="">-- เลือกม้วน --</option>' +
+    available.map(r => `<option value="${r.id}" ${val===r.id?'selected':''}>[${r.width}mm] ${r.lotNumber} — เหลือ ${fmt(getRollRemain(r),0)} m</option>`).join('');
+  if (val) updateSlitInfo();
+}
+
+function updateSlitInfo() {
+  const rollId = document.getElementById('slit-source-roll').value;
+  const box = document.getElementById('slit-source-info');
+  if (!rollId) { box.innerHTML = ''; return; }
+  const roll = rolls.find(r => r.id === rollId);
+  if (!roll) return;
+  const remain = getRollRemain(roll);
+  box.innerHTML = `
+    <div style="background:var(--surface2);border-radius:var(--radius);padding:10px 12px;margin-bottom:12px;font-size:12px">
+      <div style="display:flex;gap:16px">
+        <div><span style="color:var(--text3)">หน้ากว้าง</span> <span class="mono" style="font-weight:500">${roll.width} mm</span></div>
+        <div><span style="color:var(--text3)">คงเหลือ</span> <span class="mono" style="font-weight:500">${fmt(remain,0)} m</span></div>
+        ${roll.filmType?`<div><span style="color:var(--text3)">ประเภท</span> ${roll.filmType}</div>`:''}
+      </div>
+    </div>`;
+  calcSlit();
+}
+
+function calcSlit() {
+  const rollId = document.getElementById('slit-source-roll').value;
+  const desiredWidth = parseFloat(document.getElementById('slit-target-width').value);
+  const slitLength = parseFloat(document.getElementById('slit-length').value);
+  const box = document.getElementById('slit-preview');
+  if (!rollId || !desiredWidth || !slitLength) { box.innerHTML = ''; return; }
+  const roll = rolls.find(r => r.id === rollId);
+  if (!roll) return;
+
+  if (desiredWidth >= roll.width) {
+    box.innerHTML = `<div class="alert alert-error">หน้ากว้างที่ต้องการ (${desiredWidth}mm) ต้องน้อยกว่าต้นฉบับ (${roll.width}mm)</div>`;
+    return;
+  }
+  if (slitLength > roll.totalLength) {
+    box.innerHTML = `<div class="alert alert-error">ความยาวที่ต้องการ (${fmt(slitLength,0)}m) เกินความยาวต้นฉบับ (${fmt(roll.totalLength,0)}m)</div>`;
+    return;
+  }
+
+  // desiredWidth = หน้าที่ต้องการ (สลิตออกมา)
+  // remainWidth = ต้นฉบับที่เหลือ = sourceWidth - desiredWidth
+  const remainWidth = roll.width - desiredWidth;
+  const stripRemainder = roll.totalLength - slitLength;
+
+  box.innerHTML = `
+    <div style="background:var(--green-bg);border:1px solid #b0dbb8;border-radius:var(--radius);padding:14px;margin-bottom:12px">
+      <div style="font-size:12px;font-weight:600;color:var(--green);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.04em">ผลหลังสลิต — รวม ${2 + (stripRemainder > 0 ? 1 : 0)} ม้วน</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+
+        <div style="background:#fff;border-radius:6px;padding:10px 12px;display:flex;align-items:center;gap:10px">
+          <span class="badge badge-gray" style="min-width:52px;justify-content:center">ต้นฉบับ</span>
+          <div style="flex:1">
+            <div style="display:flex;align-items:center;gap:6px">
+              <span class="width-tag">${remainWidth} mm</span>
+              <span class="mono" style="font-weight:500">× ${fmt(roll.totalLength,0)} m</span>
+            </div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px">${roll.width}mm − ${desiredWidth}mm = ${remainWidth}mm · ยาวเท่าเดิม</div>
+          </div>
+        </div>
+
+        <div style="background:#fff;border-radius:6px;padding:10px 12px;display:flex;align-items:center;gap:10px">
+          <span class="badge badge-green" style="min-width:52px;justify-content:center">ม้วนใหม่</span>
+          <div style="flex:1">
+            <div style="display:flex;align-items:center;gap:6px">
+              <span class="width-tag" style="background:var(--green);color:#fff">${desiredWidth} mm</span>
+              <span class="mono" style="font-weight:500">× ${fmt(slitLength,0)} m</span>
+            </div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px">ม้วนที่ต้องการ</div>
+          </div>
+        </div>
+
+        ${stripRemainder > 0 ? `
+        <div style="background:#fff;border-radius:6px;padding:10px 12px;display:flex;align-items:center;gap:10px">
+          <span class="badge badge-amber" style="min-width:52px;justify-content:center">เศษ</span>
+          <div style="flex:1">
+            <div style="display:flex;align-items:center;gap:6px">
+              <span class="width-tag" style="background:var(--amber);color:#fff">${desiredWidth} mm</span>
+              <span class="mono" style="font-weight:500">× ${fmt(stripRemainder,0)} m</span>
+            </div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px">เศษ strip ที่เหลือ (${fmt(roll.totalLength,0)} − ${fmt(slitLength,0)})</div>
+          </div>
+        </div>` : ''}
+
+      </div>
+    </div>`;
+}
+
+async function doSlit() {
+  const rollId = document.getElementById('slit-source-roll').value;
+  const desiredWidth = parseFloat(document.getElementById('slit-target-width').value);
+  const slitLength = parseFloat(document.getElementById('slit-length').value);
+  const prefix = document.getElementById('slit-lot-prefix').value.trim();
+  const slitDate = document.getElementById('slit-date').value || today();
+
+  if (!rollId || !desiredWidth || !slitLength) { showAlert('กรุณากรอกข้อมูลให้ครบ', 'error'); return; }
+  const roll = rolls.find(r => r.id === rollId);
+  if (!roll) return;
+  if (desiredWidth >= roll.width) { showAlert('หน้ากว้างที่ต้องการต้องน้อยกว่าต้นฉบับ', 'error'); return; }
+  if (slitLength > roll.totalLength) { showAlert(`ความยาวที่ต้องการเกินความยาวต้นฉบับ (${fmt(roll.totalLength,0)} m)`, 'error'); return; }
+
+  const oldWidth = roll.width;
+  const sourceLength = roll.totalLength;
+  const remainWidth = oldWidth - desiredWidth;  // ต้นฉบับเหลือ
+  const stripRemainder = sourceLength - slitLength;  // เศษ strip
+  const lotPrefix = prefix || `SLIT-${roll.lotNumber}`;
+  const newRollIds = [];
+
+  try {
+    // 1. UPDATE source roll — หน้าแคบลง ความยาวเท่าเดิม
+    await sbFetch(`film_rolls?id=eq.${roll.id}`, { method:'PATCH', body: JSON.stringify({ width: remainWidth }) });
+    roll.width = remainWidth;
+
+    // 2. INSERT ม้วนใหม่ที่ต้องการ (desiredWidth × slitLength)
+    const roll2 = { id:uuid(), lotNumber:`${lotPrefix}-A`, width:desiredWidth, totalLength:slitLength, supplier:roll.supplier, filmType:roll.filmType, note:`สลิตจาก ${roll.lotNumber} (${oldWidth}mm)`, date:slitDate, createdAt:Date.now()+1 };
+    await sbFetch('film_rolls', { method:'POST', body: JSON.stringify(rollToDb(roll2)) });
+    rolls.push(roll2);
+    newRollIds.push(roll2.id);
+
+    // 3. INSERT ม้วนเศษ strip (desiredWidth × stripRemainder) ถ้ามี
+    if (stripRemainder > 0) {
+      const roll3 = { id:uuid(), lotNumber:`${lotPrefix}-B`, width:desiredWidth, totalLength:stripRemainder, supplier:roll.supplier, filmType:roll.filmType, note:`เศษ strip จาก ${roll.lotNumber} (${oldWidth}mm)`, date:slitDate, createdAt:Date.now()+2 };
+      await sbFetch('film_rolls', { method:'POST', body: JSON.stringify(rollToDb(roll3)) });
+      rolls.push(roll3);
+      newRollIds.push(roll3.id);
+    }
+
+    // 4. INSERT slit history
+    const slitRecord = { id:uuid(), sourceRollId:roll.id, sourceRollLot:roll.lotNumber, sourceWidthBefore:oldWidth, sourceWidthAfter:remainWidth, sourceLengthUnchanged:sourceLength, slitWidth:desiredWidth, slitLength, stripRemainder, numNewRolls:newRollIds.length, newRollIds, date:slitDate, createdAt:Date.now() };
+    await sbFetch('film_slits', { method:'POST', body: JSON.stringify(slitToDb(slitRecord)) });
+    slits.push(slitRecord);
+
+    document.getElementById('slit-target-width').value = '';
+    document.getElementById('slit-length').value = '';
+    document.getElementById('slit-lot-prefix').value = '';
+    document.getElementById('slit-preview').innerHTML = '';
+    document.getElementById('slit-source-info').innerHTML = '';
+    showAlert(`สลิตสำเร็จ! ได้ ${1+newRollIds.length} ม้วน → ${remainWidth}mm×${fmt(sourceLength,0)}m + ${desiredWidth}mm×${fmt(slitLength,0)}m${stripRemainder>0?` + ${desiredWidth}mm×${fmt(stripRemainder,0)}m`:''}`);
+    renderAll();
+  } catch(e) { showAlert('สลิตไม่สำเร็จ: ' + e.message, 'error'); }
+}
+
+function renderSlitHistory() {
+  const el = document.getElementById('slit-history-count');
+  if (el) el.textContent = slits.length;
+  const tbody = document.getElementById('slit-history-tbody');
+  if (!tbody) return;
+  const sorted = [...slits].sort((a,b) => b.createdAt - a.createdAt);
+  if (sorted.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6"><div class="empty">ยังไม่มีประวัติการสลิต</div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = sorted.map(s => {
+    const sourceRoll = rolls.find(x => x.id === s.sourceRollId);
+    return `<tr>
+      <td style="color:var(--text2)">${fmtDate(s.date)}</td>
+      <td>
+        <span class="mono">${s.sourceRollLot}</span><br>
+        <span style="font-size:11px;color:var(--text3)">
+          <span class="width-tag" style="font-size:10px">${s.sourceWidthBefore}mm</span>
+          → <span class="width-tag" style="font-size:10px;background:var(--amber)">${s.sourceWidthAfter}mm</span>
+          · ${fmt(s.sourceLengthUnchanged,0)}m เท่าเดิม
+        </span>
+      </td>
+      <td>
+        <span class="mono" style="font-size:12px">${s.newRollLot||'-'}</span><br>
+        <span class="width-tag" style="font-size:10px;background:var(--green);color:#fff">${s.slitWidth}mm</span>
+        <span class="mono" style="font-size:11px"> × ${fmt(s.slitLength,0)}m</span>
+      </td>
+      <td class="mono">${s.numNewRolls} ม้วน${s.leftover>0?` + เศษ`:''}</td>
+      <td class="mono">${fmt(s.slitLength,0)} m</td>
+      <td>
+        ${sourceRoll
+          ? `<span class="width-tag" style="font-size:11px">${sourceRoll.width}mm</span> <span class="mono">${fmt(getRollRemain(sourceRoll),0)}m</span>`
+          : '<span style="color:var(--text3)">ลบแล้ว</span>'}
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ===== RESERVATION FUNCTIONS =====
+// ===== RESERVATION FUNCTIONS =====
+let resMode = 'full';
+
+function setResMode(mode) {
+  resMode = mode;
+  const mFull = document.getElementById('res-mode-full');
+  const mPart = document.getElementById('res-mode-partial');
+  const bFull = document.getElementById('mode-btn-full');
+  const bPart = document.getElementById('mode-btn-partial');
+  if (mFull) mFull.style.display = mode === 'full' ? 'block' : 'none';
+  if (mPart) mPart.style.display = mode === 'partial' ? 'block' : 'none';
+  if (bFull && bPart) {
+    if (mode === 'full') {
+      bFull.style.cssText += ';background:var(--amber);border-color:var(--amber);color:#fff';
+      bPart.style.cssText += ';background:transparent;border-color:var(--border2);color:var(--text2)';
+    } else {
+      bPart.style.cssText += ';background:var(--amber);border-color:var(--amber);color:#fff';
+      bFull.style.cssText += ';background:transparent;border-color:var(--border2);color:var(--text2)';
+    }
+  }
+  checkResRemain();
+}
+
+function getUsedWidth(rollId) {
+  return reservations
+    .filter(r => r.rollId === rollId && r.status === 'reserved' && r.reservedWidth > 0)
+    .reduce((s, r) => s + r.reservedWidth, 0);
+}
+
+function populateResSelect() {
+  const sel = document.getElementById('res-roll');
+  if (!sel) return;
+  const val = sel.value;
+  const available = rolls.filter(r => getRollRemain(r) > 0).sort((a,b) => a.width - b.width);
+  sel.innerHTML = '<option value="">-- เลือกม้วน Film --</option>' +
+    available.map(r => '<option value="' + r.id + '" ' + (val===r.id?'selected':'') + '>[' + r.width + 'mm] ' + r.lotNumber + ' — ว่าง ' + fmt(getRollRemain(r),0) + ' m</option>').join('');
+  if (val) updateResInfo();
+}
+
+function updateResInfo() {
+  const rollId = document.getElementById('res-roll').value;
+  const box = document.getElementById('res-roll-info');
+  if (!box) return;
+  if (!rollId) { box.innerHTML = ''; return; }
+  const roll = rolls.find(r => r.id === rollId);
+  if (!roll) return;
+  const remain = getRollRemain(roll);
+  const reserved = getRollReserved(roll.id);
+  const usedW = getUsedWidth(roll.id);
+  const freeW = roll.width - usedW;
+  box.innerHTML =
+    '<div style="background:var(--surface2);border-radius:var(--radius);padding:10px 12px;margin-bottom:12px;font-size:12px">' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center;margin-bottom:8px">' +
+    '<div><div style="color:var(--text3)">ยาวรวม</div><div class="mono" style="font-weight:500">' + fmt(roll.totalLength,0) + ' m</div></div>' +
+    '<div><div style="color:var(--amber)">จองแล้ว</div><div class="mono" style="font-weight:500;color:var(--amber)">' + fmt(reserved,0) + ' m</div></div>' +
+    '<div><div style="color:var(--green)">ยาวว่าง</div><div class="mono" style="font-weight:500;color:var(--green)">' + fmt(remain,0) + ' m</div></div>' +
+    '</div>' +
+    '<div style="border-top:1px solid var(--border);padding-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:8px;text-align:center">' +
+    '<div><div style="color:var(--text3)">กว้างต้นฉบับ</div><div class="mono" style="font-weight:500">' + roll.width + ' mm</div></div>' +
+    '<div><div style="color:' + (freeW>0?'var(--green)':'var(--red)') + '">กว้างว่าง</div><div class="mono" style="font-weight:500;color:' + (freeW>0?'var(--green)':'var(--red)') + '">' + freeW + ' mm</div></div>' +
+    '</div></div>';
+  checkResRemain();
+}
+
+function checkResRemain() {
+  const rollId = document.getElementById('res-roll').value;
+  const preview = document.getElementById('res-preview');
+  const warn = document.getElementById('res-warn');
+  if (!warn) return;
+  if (!rollId) { if(preview) preview.innerHTML=''; warn.innerHTML=''; return; }
+  const roll = rolls.find(r => r.id === rollId);
+  if (!roll) return;
+
+  if (resMode === 'full') {
+    const length = parseFloat(document.getElementById('res-length').value) || 0;
+    if (!length) { if(preview) preview.innerHTML=''; warn.innerHTML=''; return; }
+    const remain = getRollRemain(roll);
+    const after = remain - length;
+    if (after < 0) {
+      warn.innerHTML = '<div class="alert alert-error" style="margin-bottom:10px">เกินที่ว่าง! ขาดอีก ' + fmt(Math.abs(after),1) + ' m</div>';
+      if(preview) preview.innerHTML = '';
+    } else {
+      warn.innerHTML = '';
+      if(preview) preview.innerHTML =
+        '<div style="background:var(--green-bg);border:1px solid #b0dbb8;border-radius:var(--radius);padding:10px 12px;margin-bottom:10px;font-size:12px">' +
+        '<div style="display:flex;align-items:center;gap:8px">' +
+        '<span class="width-tag">' + roll.width + ' mm</span>' +
+        '<span class="mono" style="font-weight:500">× ' + fmt(length,0) + ' m</span>' +
+        '<span style="color:var(--text3)">· ยาวว่างหลังจอง: ' + fmt(after,0) + ' m</span></div></div>';
+    }
+  } else {
+    const width  = parseFloat(document.getElementById('res-width') ? document.getElementById('res-width').value : 0) || 0;
+    const length = parseFloat(document.getElementById('res-length-p') ? document.getElementById('res-length-p').value : 0) || 0;
+    if (!width || !length) { if(preview) preview.innerHTML=''; warn.innerHTML=''; return; }
+    const usedW  = getUsedWidth(roll.id);
+    const freeW  = roll.width - usedW;
+    const remain = getRollRemain(roll);
+    const errs = [];
+    if (width > freeW)   errs.push('หน้ากว้าง (' + width + 'mm) เกินที่ว่าง (' + freeW + 'mm)');
+    if (length > remain) errs.push('ความยาว (' + fmt(length,0) + 'm) เกินที่ว่าง (' + fmt(remain,0) + 'm)');
+    if (errs.length > 0) {
+      warn.innerHTML = '<div class="alert alert-error" style="margin-bottom:10px">' + errs.join('<br>') + '</div>';
+      if(preview) preview.innerHTML = '';
+    } else {
+      warn.innerHTML = '';
+      const remW = freeW - width;
+      if(preview) preview.innerHTML =
+        '<div style="background:var(--green-bg);border:1px solid #b0dbb8;border-radius:var(--radius);padding:12px;margin-bottom:10px;font-size:12px">' +
+        '<div style="font-weight:500;color:var(--green);margin-bottom:8px">สรุปการจอง</div>' +
+        '<div style="display:flex;flex-direction:column;gap:6px">' +
+        '<div style="display:flex;align-items:center;gap:8px">' +
+        '<span style="background:var(--amber);color:#fff;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:500">จอง</span>' +
+        '<span class="width-tag" style="background:var(--amber)">' + width + ' mm</span>' +
+        '<span class="mono" style="font-weight:500">× ' + fmt(length,0) + ' m</span></div>' +
+        '<div style="display:flex;align-items:center;gap:8px">' +
+        '<span style="background:var(--surface2);color:var(--text2);padding:2px 8px;border-radius:4px;font-size:11px">เหลือ</span>' +
+        '<span class="width-tag">' + remW + ' mm</span>' +
+        '<span style="color:var(--text3)">× ' + fmt(remain,0) + ' m ยังว่าง</span></div>' +
+        '</div></div>';
+    }
+  }
+}
+
+async function saveReservation() {
+  const rollId = document.getElementById('res-roll').value;
+  const customer = document.getElementById('res-customer').value.trim();
+  if (!rollId || !customer) { showAlert('กรุณาเลือกม้วนและกรอกชื่อลูกค้า', 'error'); return; }
+  const roll = rolls.find(r => r.id === rollId);
+  if (!roll) return;
+
+  let length, reservedWidth = 0, date;
+  if (resMode === 'full') {
+    length = parseFloat(document.getElementById('res-length').value);
+    date   = document.getElementById('res-date').value || today();
+    if (!length) { showAlert('กรุณากรอกความยาว', 'error'); return; }
+    const remain = getRollRemain(roll);
+    if (length > remain) { showAlert('เกินที่ว่าง (' + fmt(remain,0) + ' m)', 'error'); return; }
+  } else {
+    reservedWidth = parseFloat(document.getElementById('res-width').value);
+    length        = parseFloat(document.getElementById('res-length-p').value);
+    date          = document.getElementById('res-date-p').value || today();
+    if (!reservedWidth || !length) { showAlert('กรุณากรอกหน้ากว้างและความยาว', 'error'); return; }
+    const freeW = roll.width - getUsedWidth(roll.id);
+    const remain = getRollRemain(roll);
+    if (reservedWidth > freeW)  { showAlert('หน้ากว้างเกินที่ว่าง (' + freeW + 'mm)', 'error'); return; }
+    if (length > remain)        { showAlert('ความยาวเกินที่ว่าง (' + fmt(remain,0) + 'm)', 'error'); return; }
+  }
+
+  const res = { id:uuid(), rollId, customer,
+    jobOrder: document.getElementById('res-joborder').value.trim(),
+    product:  document.getElementById('res-product').value.trim(),
+    length, reservedWidth, date,
+    note: document.getElementById('res-note').value.trim(),
+    status: 'reserved', createdAt: Date.now()
+  };
+  try {
+    await sbFetch('film_reservations', { method:'POST', body: JSON.stringify(resToDb(res)) });
+    reservations.push(res);
+    ['res-customer','res-joborder','res-product','res-length','res-note'].forEach(id => {
+      const el = document.getElementById(id); if(el) el.value = '';
+    });
+    const elW = document.getElementById('res-width'); if(elW) elW.value = '';
+    const elLP = document.getElementById('res-length-p'); if(elLP) elLP.value = '';
+    const warnEl = document.getElementById('res-warn'); if(warnEl) warnEl.innerHTML = '';
+    const prevEl = document.getElementById('res-preview'); if(prevEl) prevEl.innerHTML = '';
+    const sizeLabel = reservedWidth > 0 ? reservedWidth + 'mm × ' + fmt(length,0) + 'm' : fmt(length,0) + 'm';
+    showAlert('จอง Film ' + sizeLabel + ' สำหรับ "' + customer + '" เรียบร้อย');
+    renderAll();
+  } catch(e) { showAlert('จองไม่สำเร็จ: ' + e.message, 'error'); }
+}
+
+// ===== RESERVATION ACTION MODAL =====
+function openResAction(resId) {
+  const res = reservations.find(r => r.id === resId);
+  if (!res) return;
+  const roll = rolls.find(r => r.id === res.rollId);
+  const rollName = roll ? '[' + roll.width + 'mm] ' + roll.lotNumber : 'ม้วนไม่พบ';
+
+  const slitChildren = slits.filter(s => s.sourceRollId === res.rollId);
+  const slitRollOptions = slitChildren.flatMap(s =>
+    (s.newRollIds || []).map(rid => rolls.find(r => r.id === rid)).filter(Boolean)
+  );
+
+  let slitSection = '';
+  if (slitRollOptions.length > 0) {
+    const opts = slitRollOptions.map(r =>
+      '<option value="' + r.id + '">[' + r.width + 'mm] ' + r.lotNumber + ' (' + fmt(getRollRemain(r),0) + 'm)</option>'
+    ).join('');
+    slitSection =
+      '<select id="slit-roll-select" style="font-size:12px;padding:6px 8px">' +
+        '<option value="">-- เลือกม้วนที่สลิต --</option>' + opts +
+      '</select>' +
+      '<button onclick="doResUsedSlit(\'' + resId + '\')" ' +
+        'style="background:var(--green);color:#fff;border:none;border-radius:var(--radius);padding:8px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit" ' +
+        'onmouseover="this.style.opacity=0.85" onmouseout="this.style.opacity=1">' +
+        '&#10003; ใช้แล้ว (ม้วนที่สลิต)' +
+      '</button>';
+  } else {
+    slitSection =
+      '<div style="font-size:11px;color:var(--amber);padding:4px 0">ไม่พบม้วนสลิตในระบบ — บันทึกสลิตก่อน</div>' +
+      '<button onclick="goPage(\'slit\');closeModal(\'modal-res-action\')" ' +
+        'style="background:var(--amber);color:#fff;border:none;border-radius:var(--radius);padding:8px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit">' +
+        'ไปหน้าสลิต &#8594;' +
+      '</button>';
+  }
+
+  const html =
+    '<div style="margin-bottom:16px">' +
+      '<div style="font-size:16px;font-weight:500;margin-bottom:4px">ดำเนินการการจอง</div>' +
+      '<div style="font-size:13px;color:var(--text2)">' + res.customer + ' &nbsp;&#183;&nbsp; <span style="font-family:IBM Plex Mono,monospace">' + (res.jobOrder || res.product || '—') + '</span></div>' +
+    '</div>' +
+
+    '<div style="background:var(--surface2);border-radius:var(--radius);padding:12px 14px;margin-bottom:20px;display:flex;gap:20px;flex-wrap:wrap">' +
+      '<div><div style="font-size:11px;color:var(--text3)">ม้วนที่จอง</div><div style="font-family:IBM Plex Mono,monospace;font-size:13px;font-weight:500">' + rollName + '</div></div>' +
+      '<div><div style="font-size:11px;color:var(--text3)">จำนวน</div><div style="font-family:IBM Plex Mono,monospace;font-size:16px;font-weight:500;color:var(--amber)">' + fmt(res.length,0) + ' m</div></div>' +
+      '<div><div style="font-size:11px;color:var(--text3)">สินค้า</div><div style="font-size:13px">' + (res.product || '—') + '</div></div>' +
+    '</div>' +
+
+    '<div style="font-size:13px;font-weight:500;margin-bottom:12px">สลิตแล้วหรือยัง?</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">' +
+
+      '<div style="border:1.5px solid var(--border);border-radius:var(--radius-lg);padding:14px;display:flex;flex-direction:column;gap:10px">' +
+        '<div style="font-size:12px;font-weight:500">&#x1F4E6; ยังไม่สลิต</div>' +
+        '<div style="font-size:11px;color:var(--text3)">Film ยังเป็นม้วนต้นฉบับอยู่</div>' +
+        '<button onclick="doResUsed(\'' + resId + '\')" ' +
+          'style="background:var(--green);color:#fff;border:none;border-radius:var(--radius);padding:9px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit" ' +
+          'onmouseover="this.style.opacity=0.85" onmouseout="this.style.opacity=1">' +
+          '&#10003; ใช้แล้ว (ม้วนต้นฉบับ)' +
+        '</button>' +
+        '<button onclick="doResCancel(\'' + resId + '\', false)" ' +
+          'style="background:transparent;color:var(--red);border:1px solid var(--red);border-radius:var(--radius);padding:8px;font-size:12px;cursor:pointer;font-family:inherit" ' +
+          'onmouseover="this.style.background=\'var(--red-bg)\'" onmouseout="this.style.background=\'transparent\'">' +
+          '&#10005; ยกเลิก — คืนยอดม้วนเดิม' +
+        '</button>' +
+      '</div>' +
+
+      '<div style="border:1.5px solid var(--amber-border);background:var(--amber-bg);border-radius:var(--radius-lg);padding:14px;display:flex;flex-direction:column;gap:10px">' +
+        '<div style="font-size:12px;font-weight:500">&#x2702; สลิตแล้ว</div>' +
+        '<div style="font-size:11px;color:var(--text3)">มีม้วนใหม่ในระบบแล้ว</div>' +
+        slitSection +
+        '<button onclick="doResCancel(\'' + resId + '\', true)" ' +
+          'style="background:transparent;color:var(--text2);border:1px solid var(--border2);border-radius:var(--radius);padding:8px;font-size:12px;cursor:pointer;font-family:inherit" ' +
+          'onmouseover="this.style.background=\'var(--surface2)\'" onmouseout="this.style.background=\'transparent\'">' +
+          '&#10005; ยกเลิกจอง — ม้วนสลิตยังอยู่ในระบบ' +
+        '</button>' +
+      '</div>' +
+
+    '</div>';
+
+  document.getElementById('res-action-content').innerHTML = html;
+  document.getElementById('modal-res-action').classList.add('open');
+}
+
+// ใช้แล้ว (ยังไม่สลิต) — บันทึก usage จากม้วนต้นฉบับ
+async function doResUsed(resId) {
+  const res = reservations.find(r => r.id === resId);
+  if (!res) return;
+  if (!confirm('ยืนยันว่า "' + res.customer + '" ใช้ Film ' + fmt(res.length,0) + ' m จากม้วนต้นฉบับแล้ว?')) return;
+  try {
+    const usage = { id:uuid(), rollId:res.rollId, customer:res.customer, jobOrder:res.jobOrder||'',
+      product:res.product, length:res.length, date:today(),
+      note:'ยืนยันจากการจอง' + (res.note ? ': '+res.note : ''), createdAt:Date.now() };
+    await sbFetch('film_usages', { method:'POST', body: JSON.stringify(usageToDb(usage)) });
+    usages.push(usage);
+    await sbFetch('film_reservations?id=eq.'+resId, { method:'DELETE' });
+    reservations = reservations.filter(r => r.id !== resId);
+    closeModal('modal-res-action');
+    showAlert('ยืนยันการใช้งาน "' + res.customer + '" เรียบร้อย — บันทึกจากม้วนต้นฉบับ');
+    renderAll();
+  } catch(e) { showAlert('เกิดข้อผิดพลาด: ' + e.message, 'error'); }
+}
+
+// ใช้แล้ว (สลิตแล้ว) — บันทึก usage จากม้วนที่เลือก
+async function doResUsedSlit(resId) {
+  const slitRollId = document.getElementById('slit-roll-select')?.value;
+  if (!slitRollId) { showAlert('กรุณาเลือกม้วนที่สลิต', 'error'); return; }
+  const res = reservations.find(r => r.id === resId);
+  if (!res) return;
+  const slitRoll = rolls.find(r => r.id === slitRollId);
+  if (!slitRoll) return;
+  try {
+    const usage = { id:uuid(), rollId:slitRollId, customer:res.customer, jobOrder:res.jobOrder||'',
+      product:res.product, length:res.length, date:today(),
+      note:'ยืนยันจากการจอง (ม้วนสลิต ' + slitRoll.lotNumber + ')' + (res.note ? ': '+res.note : ''),
+      createdAt:Date.now() };
+    await sbFetch('film_usages', { method:'POST', body: JSON.stringify(usageToDb(usage)) });
+    usages.push(usage);
+    await sbFetch('film_reservations?id=eq.'+resId, { method:'DELETE' });
+    reservations = reservations.filter(r => r.id !== resId);
+    closeModal('modal-res-action');
+    showAlert('ยืนยันการใช้งาน "' + res.customer + '" เรียบร้อย — หักจาก ' + slitRoll.lotNumber);
+    renderAll();
+  } catch(e) { showAlert('เกิดข้อผิดพลาด: ' + e.message, 'error'); }
+}
+
+// ยกเลิกการจอง (2 แบบ)
+async function doResCancel(resId, wasSlit) {
+  const res = reservations.find(r => r.id === resId);
+  if (!res) return;
+  const msg = wasSlit
+    ? 'ยกเลิกการจอง?\nม้วนที่สลิตแล้วจะยังอยู่ในระบบ พร้อมให้งานอื่นใช้ได้'
+    : 'ยกเลิกการจอง?\nยอดจะถูกคืนกลับไปที่ม้วนต้นฉบับ';
+  if (!confirm(msg)) return;
+  try {
+    await sbFetch('film_reservations?id=eq.'+resId, { method:'DELETE' });
+    reservations = reservations.filter(r => r.id !== resId);
+    closeModal('modal-res-action');
+    showAlert(wasSlit
+      ? 'ยกเลิกการจองแล้ว — ม้วนสลิตยังอยู่ในระบบ พร้อมใช้งาน'
+      : 'ยกเลิกการจองแล้ว — คืนยอดม้วนต้นฉบับแล้ว');
+    renderAll();
+  } catch(e) { showAlert('เกิดข้อผิดพลาด: ' + e.message, 'error'); }
+}
+
+function renderReservations() {
+  const q = (document.getElementById('res-search')?.value || '').toLowerCase();
+  let active = reservations.filter(r => r.status === 'reserved').sort((a,b) => b.createdAt - a.createdAt);
+  if (q) active = active.filter(res => {
+    const roll = rolls.find(r => r.id === res.rollId);
+    return res.customer.toLowerCase().includes(q) ||
+      (res.jobOrder||'').toLowerCase().includes(q) ||
+      (res.product||'').toLowerCase().includes(q) ||
+      (roll?.lotNumber||'').toLowerCase().includes(q) ||
+      (roll?.filmType||'').toLowerCase().includes(q);
+  });
+  const countEl = document.getElementById('res-count');
+  if (countEl) countEl.textContent = active.length;
+  const box = document.getElementById('res-list');
+  if (!box) return;
+
+  if (active.length === 0) {
+    box.innerHTML = '<div class="card"><div class="empty">ยังไม่มีการจอง</div></div>';
+    return;
+  }
+
+  box.innerHTML = `
+  <div class="card" style="padding:0;overflow:hidden">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>วันที่จอง</th>
+            <th>Lot / หน้ากว้าง</th>
+            <th>ลูกค้า</th>
+            <th>Job Order</th>
+            <th>สินค้า</th>
+            <th>ขนาดที่จอง</th>
+            <th>หมายเหตุ</th>
+            <th style="min-width:110px">ดำเนินการ</th>
+          </tr>
+        </thead>
+        <tbody>
+        ${active.map(res => {
+          const roll = rolls.find(r => r.id === res.rollId);
+          const hasWidth = res.reservedWidth > 0;
+          return `<tr>
+            <td style="color:var(--text2);white-space:nowrap">${fmtDate(res.date)}</td>
+            <td>${roll
+              ? `<span class="mono" style="font-size:12px">${roll.lotNumber}</span><br><span class="width-tag" style="font-size:10px">${roll.width}mm</span>`
+              : '<span style="color:var(--red)">ม้วนถูกลบ</span>'}</td>
+            <td style="font-weight:500">${res.customer}</td>
+            <td><span class="mono" style="font-size:12px;color:var(--blue)">${res.jobOrder||'—'}</span></td>
+            <td style="color:var(--text2)">${res.product||'—'}</td>
+            <td>
+              ${hasWidth
+                ? `<span class="width-tag" style="background:var(--amber);font-size:11px">${res.reservedWidth}mm</span>
+                   <span class="mono" style="font-weight:500;font-size:13px;color:var(--amber)"> × ${fmt(res.length,0)} m</span>`
+                : `<span style="color:var(--text3);font-size:11px">ทั้งม้วน ·</span>
+                   <span class="mono" style="font-weight:500;font-size:14px;color:var(--amber)"> ${fmt(res.length,0)} m</span>`}
+            </td>
+            <td style="font-size:12px;color:var(--text3)">${res.note||'—'}</td>
+            <td>
+              <button onclick="openResAction('${res.id}')"
+                style="background:var(--amber);color:#fff;border:none;border-radius:var(--radius);padding:7px 16px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap"
+                onmouseover="this.style.opacity=0.85" onmouseout="this.style.opacity=1">
+                ดำเนินการ
+              </button>
+            </td>
+          </tr>`;
+        }).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+// ===== INIT =====
+document.getElementById('use-date').value = today();
+document.getElementById('slit-date').value = today();
+document.getElementById('res-date').value = today();
+window.addEventListener('load', loadData);
+</script>
+</body>
+</html>
